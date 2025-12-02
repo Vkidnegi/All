@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Alchemist's Forge: Elemental Transmutation</title>
+    <!-- Load Tailwind CSS via CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <!-- Load Tone.js for sound effects -->
+    <script src="https://unpkg.com/tone@14.8.49/build/Tone.js"></script>
+    <!-- Load Canvas Confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <!-- MathJax for LaTeX rendering -->
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        /* ... your CSS unchanged ... */
+        /* [add style block from your original code] */
+    </style>
+</head>
+<body class="p-4 sm:p-8 flex flex-col relative">
+    
+    <!-- Dynamic Background Graphic -->
+    <div id="cosmicField"></div>
+    <!-- ...rest of your HTML - unchanged... -->
+
+    <!-- Scripts -->
+    <script>
+        // [Data, Audio Manager, Game Logic THE SAME as before except for...]
+        // --- Only Changed Parts Below ---
+        /*** Replaces: button.textContent = option; with innerHTML ***/
+        function renderMcqOptions(options) {
+            mcqOptionsContainer.innerHTML = '';
+            options.forEach(option => {
+                const button = document.createElement('button');
+                button.innerHTML = option; // FIX for LaTeX rendering
+                button.setAttribute('data-option', option);
+                button.className = 'mcq-option w-full text-left px-4 py-3 rounded-xl font-medium shadow-md focus:outline-none';
+                button.onclick = () => selectOption(option, button);
+                mcqOptionsContainer.appendChild(button);
+            });
+            // MathJax typeset
+            if (window.MathJax) window.MathJax.typeset();
+        }
+
+        function openModal(level) {
+            if (currentElementChain.length === 0) {
+                showTemporaryMessage("Initiate an Alchemy Cycle first!", 'red');
+                return;
+            }
+            if (document.getElementById(`${level}Card`).classList.contains('answered')) {
+                showTemporaryMessage("This level has already been transmuted this cycle.", 'orange');
+                return;
+            }
+            if (document.getElementById(`${level}Card`).classList.contains('disabled-card')) {
+                showTemporaryMessage("The current cycle is locked. Please initiate a new catalyst.", 'red');
+                return;
+            }
+            currentLevel = level;
+            const data = getQuestionData(level);
+
+            hintUsed = false;
+            hintText.classList.add('hidden');
+            hintButton.disabled = false;
+            let pointValue = POINTS[level];
+            let hintPoints = Math.floor(pointValue / 2);
+            hintButton.textContent = `💡 View Hint (Points Halved - ${hintPoints} Pts)`;
+            hintButton.classList.remove('opacity-50', 'cursor-not-allowed');
+            modalTitle.textContent = `${level.toUpperCase()} TRANSMUTATION (${data.points} Pts)`;
+            modalQuestion.innerHTML = data.q; // FIX for LaTeX
+
+            selectedOption = null;
+            submitAnswerButton.disabled = true;
+            selectedAnswerDisplay.classList.add('hidden');
+            renderMcqOptions(data.options);
+
+            feedbackMessage.classList.add('hidden');
+            modal.classList.remove('hidden');
+            if (window.MathJax) window.MathJax.typeset(); // MathJax call
+
+            if (level === 'reaction') {
+                hintButton.classList.add('hidden');
+            } else {
+                hintButton.classList.remove('hidden');
+            }
+        }
+
+        function showHint() {
+            const data = getQuestionData(currentLevel);
+            hintUsed = true;
+            hintText.innerHTML = data.h; // FIX for LaTeX
+            hintText.classList.remove('hidden');
+            hintButton.textContent = `Hint Activated (Points Halved - ${Math.floor(POINTS[currentLevel] / 2)} Pts)`;
+            hintButton.disabled = true;
+            hintButton.classList.add('opacity-50', 'cursor-not-allowed');
+            if (window.MathJax) window.MathJax.typeset();
+        }
+
+        // [Other logic unchanged]
+
+        window.onload = function() {
+            SoundManager.init(); 
+            createCosmicField();
+            updateScore(0);
+            updateCyclesLeft();
+            lockTurn('Initiate New Catalyst to begin the Cycle.', true); 
+            if (window.MathJax) window.MathJax.typeset();
+        };
+    </script>
+</body>
+</html>
